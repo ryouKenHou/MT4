@@ -105,5 +105,6 @@
     </ClInclude>
     <ClInclude Include="matrix4x4.hpp" />
     <ClInclude Include="Vector2.hpp" />
+    <ClInclude Include="Quaternion.hpp" />
   </ItemGroup>
 </Project>
