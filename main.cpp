@@ -5,6 +5,7 @@
 #include "Vector2.hpp"
 #include "matrix4x4.hpp"
 #include <algorithm>
+#include "Quaternion.hpp"
 
 const char kWindowTitle[] = "LC1B_35_リョウ_ケン_ホウ";
 
@@ -13,6 +14,7 @@ struct Spherical {
 	float theta;
 	float phi;
 };
+
 
 Vector3 ToCartesian(const Spherical& spherical) {
 	float rho = spherical.radius * cos(spherical.theta);
@@ -51,13 +53,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 	
-	int r1 = 12;
-	int r2 = 20;
-
-	float deltaTime = 1.0f / 60.0f;
-	
-	Vector2 circlePosition = { 640.0f, 360.0f };
-	float speed = 10.f;
+	Quaternion q1 = Quaternion(2.f, 3.0f, 4.0f, 1.0f);
+	Quaternion q2 = Quaternion(1.f, 3.0f, 5.0f, 2.0f);
+	Quaternion indentity = IndentityQuaternion();
+	Quaternion conj = Conjugate(q1);
+	Quaternion inv = Inverse(q1);
+	Quaternion normal = Normalize(q1);
+	Quaternion mul1 = Multiply(q1, q2);
+	Quaternion mul2 = q2 * q1;
+	float norm = Norm(q1);
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -72,11 +76,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 		
-		int x, y;
-		Novice::GetMousePosition(&x, &y);
-
-		circlePosition.x += (speed * deltaTime) * (x - circlePosition.x) ;
-		circlePosition.y += (speed * deltaTime) * (y - circlePosition.y);
 
 		///
 		/// ↑更新処理ここまで
@@ -85,21 +84,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-		ImGui::Begin("interpolation controller");
-		ImGui::Text("Target: Mouse Position (Red Circle)");
-		ImGui::Separator();
-		ImGui::SliderFloat("Speed", &speed, 0.1f, 10.0f, "%.3f");
-		ImGui::Text("Mouse Position: (%d, %d)", x, y);
-		ImGui::Text("circle Position: (%.2f, %.2f)", circlePosition.x, circlePosition.y);
-		ImGui::Text("Distance: %.2f", std::sqrt((x - circlePosition.x) * (x - circlePosition.x) + (y - circlePosition.y) * (y - circlePosition.y)));
-		ImGui::Separator();
-
-		ImGui::End();
-
-		Novice::DrawLine(static_cast<int>(circlePosition.x), static_cast<int>(circlePosition.y), x, y, 0xFFFFFFFF);
-		Novice::DrawEllipse(static_cast<int>(circlePosition.x), static_cast<int>(circlePosition.y), r2, r2, 0.0f, 0xFFFF00FF, kFillModeSolid);
-		Novice::DrawEllipse(x, y, r1, r1, 0.0f, RED, kFillModeSolid);
 		
+		Novice::ScreenPrintf(0, 0,   "q1       : %.3f, %.3f, %.3f, %.3f", q1.w, q1.x, q1.y, q1.z);
+		Novice::ScreenPrintf(0, 20,  "q2       : %.3f, %.3f, %.3f, %.3f", q2.w, q2.x, q2.y, q2.z);
+		Novice::ScreenPrintf(0, 40,  "indentity: %.3f, %.3f, %.3f, %.3f", indentity.w, indentity.x, indentity.y, indentity.z);
+		Novice::ScreenPrintf(0, 60,  "conj     : %.3f, %.3f, %.3f, %.3f", conj.w, conj.x, conj.y, conj.z);
+		Novice::ScreenPrintf(0, 80,  "inv      : %.3f, %.3f, %.3f, %.3f", inv.w, inv.x, inv.y, inv.z);
+		Novice::ScreenPrintf(0, 100, "normal   : %.3f, %.3f, %.3f, %.3f", normal.w, normal.x, normal.y, normal.z);
+		Novice::ScreenPrintf(0, 120, "mul1     : %.3f, %.3f, %.3f, %.3f", mul1.w, mul1.x, mul1.y, mul1.z);
+		Novice::ScreenPrintf(0, 140, "mul2     : %.3f, %.3f, %.3f, %.3f", mul2.w, mul2.x, mul2.y, mul2.z);
+		Novice::ScreenPrintf(0, 160, "norm     : %.3f", norm);
+
 
 		///
 		/// ↑描画処理ここまで
