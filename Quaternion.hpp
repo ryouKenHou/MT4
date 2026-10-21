@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <cmath>
+#include "matrix4x4.hpp"
 
 struct Quaternion {
 	float x;
@@ -75,4 +76,43 @@ inline Quaternion operator*(float scalar, const Quaternion& q) {
 
 inline float Norm(const Quaternion& q) {
 	return std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+}
+
+inline Quaternion MakeRotateAsisAngleQuaternion(const Vector3& axis, float angle) {
+	float halfAngle = angle * 0.5f;
+	float sinHalfAngle = std::sin(halfAngle);
+	float cosHalfAngle = std::cos(halfAngle);
+	return Quaternion(
+		axis.x * sinHalfAngle,
+		axis.y * sinHalfAngle,
+		axis.z * sinHalfAngle,
+		cosHalfAngle
+	);
+}
+
+inline Vector3 RotateVector(const Vector3& v, const Quaternion& q) {
+	Quaternion p(v.x, v.y, v.z, 0);
+	Quaternion qConjugate = Conjugate(q);
+	Quaternion rotatedP = q * p * qConjugate;
+	return Vector3(rotatedP.x, rotatedP.y, rotatedP.z);
+}
+
+Matrix4x4 MakeRotateMatrix(const Quaternion& q) {
+	float xx = q.x * q.x;
+	float yy = q.y * q.y;
+	float zz = q.z * q.z;
+	float ww = q.w * q.w;
+	float xy = q.x * q.y;
+	float xz = q.x * q.z;
+	float yz = q.y * q.z;
+	float wx = q.w * q.x;
+	float wy = q.w * q.y;
+	float wz = q.w * q.z;
+	return Matrix4x4(
+		ww + xx - yy - zz, 2.0f * (xy + wz), 2.0f * (xz - wy), 0.0f,
+		2.0f * (xy - wz), ww - xx + yy - zz, 2.0f * (yz + wx), 0.0f,
+		2.0f * (xz + wy), 2.0f * (yz - wx), ww - xx - yy + zz, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	);
+
 }

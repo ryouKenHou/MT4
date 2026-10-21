@@ -53,15 +53,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 	
-	Quaternion q1 = Quaternion(2.f, 3.0f, 4.0f, 1.0f);
-	Quaternion q2 = Quaternion(1.f, 3.0f, 5.0f, 2.0f);
-	Quaternion indentity = IndentityQuaternion();
-	Quaternion conj = Conjugate(q1);
-	Quaternion inv = Inverse(q1);
-	Quaternion normal = Normalize(q1);
-	Quaternion mul1 = Multiply(q1, q2);
-	Quaternion mul2 = q2 * q1;
-	float norm = Norm(q1);
+	Quaternion rotation = MakeRotateAsisAngleQuaternion(Vector3::Normalized({ 1.0f, 0.40f, -0.20f}), 0.450f);
+	Vector3 pointY = { 2.1f, -0.9f, 1.3f };
+	Matrix4x4 rotateMatrix = MakeRotateMatrix(rotation);
+	Vector3 rotateByQuaternion = RotateVector(pointY, rotation);
+	Vector3 rotateByMatrix = Transform(pointY, rotateMatrix);
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -85,16 +81,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 		
-		Novice::ScreenPrintf(0, 0,   "q1       : %.3f, %.3f, %.3f, %.3f", q1.w, q1.x, q1.y, q1.z);
-		Novice::ScreenPrintf(0, 20,  "q2       : %.3f, %.3f, %.3f, %.3f", q2.w, q2.x, q2.y, q2.z);
-		Novice::ScreenPrintf(0, 40,  "indentity: %.3f, %.3f, %.3f, %.3f", indentity.w, indentity.x, indentity.y, indentity.z);
-		Novice::ScreenPrintf(0, 60,  "conj     : %.3f, %.3f, %.3f, %.3f", conj.w, conj.x, conj.y, conj.z);
-		Novice::ScreenPrintf(0, 80,  "inv      : %.3f, %.3f, %.3f, %.3f", inv.w, inv.x, inv.y, inv.z);
-		Novice::ScreenPrintf(0, 100, "normal   : %.3f, %.3f, %.3f, %.3f", normal.w, normal.x, normal.y, normal.z);
-		Novice::ScreenPrintf(0, 120, "mul1     : %.3f, %.3f, %.3f, %.3f", mul1.w, mul1.x, mul1.y, mul1.z);
-		Novice::ScreenPrintf(0, 140, "mul2     : %.3f, %.3f, %.3f, %.3f", mul2.w, mul2.x, mul2.y, mul2.z);
-		Novice::ScreenPrintf(0, 160, "norm     : %.3f", norm);
-
+		Novice::ScreenPrintf(0, 0, "rotation quaternion: (%.3f, %.3f, %.3f, %.3f)", rotation.x, rotation.y, rotation.z, rotation.w);
+		Novice::ScreenPrintf(0, 20, "rotateMatrix:");
+		Novice::ScreenPrintf(0, 40, "(%.3f, %.3f, %.3f, %.3f)", rotateMatrix.m[0][0], rotateMatrix.m[0][1], rotateMatrix.m[0][2], rotateMatrix.m[0][3]);
+		Novice::ScreenPrintf(0, 60, "(%.3f, %.3f, %.3f, %.3f)", rotateMatrix.m[1][0], rotateMatrix.m[1][1], rotateMatrix.m[1][2], rotateMatrix.m[1][3]);
+		Novice::ScreenPrintf(0, 80, "(%.3f, %.3f, %.3f, %.3f)", rotateMatrix.m[2][0], rotateMatrix.m[2][1], rotateMatrix.m[2][2], rotateMatrix.m[2][3]);
+		Novice::ScreenPrintf(0, 100, "(%.3f, %.3f, %.3f, %.3f)", rotateMatrix.m[3][0], rotateMatrix.m[3][1], rotateMatrix.m[3][2], rotateMatrix.m[3][3]);
+		Novice::ScreenPrintf(0, 120, "rotateByQuaternion: (%.3f, %.3f, %.3f)", rotateByQuaternion.x, rotateByQuaternion.y, rotateByQuaternion.z);
+		Novice::ScreenPrintf(0, 140, "rotateByMatrix: (%.3f, %.3f, %.3f)", rotateByMatrix.x, rotateByMatrix.y, rotateByMatrix.z);
 
 		///
 		/// ↑描画処理ここまで
