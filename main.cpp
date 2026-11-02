@@ -7,6 +7,8 @@
 #include <algorithm>
 #include "Quaternion.hpp"
 
+#include <string>
+
 const char kWindowTitle[] = "LC1B_35_リョウ_ケン_ホウ";
 
 struct Spherical {
@@ -38,6 +40,14 @@ Spherical ToSpherical(const Vector3& p) {
 
 }
 
+void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, std::string s) {
+	Novice::ScreenPrintf(x, y+0, s.c_str());
+	Novice::ScreenPrintf(x, y+40, "(%.3f, %.3f, %.3f, %.3f)", matrix.m[0][0], matrix.m[0][1], matrix.m[0][2], matrix.m[0][3]);
+	Novice::ScreenPrintf(x, y+60, "(%.3f, %.3f, %.3f, %.3f)", matrix.m[1][0], matrix.m[1][1], matrix.m[1][2], matrix.m[1][3]);
+	Novice::ScreenPrintf(x, y+80, "(%.3f, %.3f, %.3f, %.3f)", matrix.m[2][0], matrix.m[2][1], matrix.m[2][2], matrix.m[2][3]);
+	Novice::ScreenPrintf(x, y+100, "(%.3f, %.3f, %.3f, %.3f)", matrix.m[3][0], matrix.m[3][1], matrix.m[3][2], matrix.m[3][3]);
+}
+
 struct Vector2 {
 	float x;
 	float y;
@@ -53,11 +63,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 	
-	Quaternion rotation = MakeRotateAsisAngleQuaternion(Vector3::Normalized({ 1.0f, 0.40f, -0.20f}), 0.450f);
-	Vector3 pointY = { 2.1f, -0.9f, 1.3f };
-	Matrix4x4 rotateMatrix = MakeRotateMatrix(rotation);
-	Vector3 rotateByQuaternion = RotateVector(pointY, rotation);
-	Vector3 rotateByMatrix = Transform(pointY, rotateMatrix);
+	Vector3 form0 = Vector3::Normalized(Vector3(1.0f, 0.70f, 0.50f));
+	Vector3 to0 = form0 * -1;
+	Vector3 from1 = Vector3::Normalized(Vector3(-0.60f, 0.9f, 0.2f));
+	Vector3 to1 = Vector3::Normalized(Vector3(0.4f, 0.7f, -0.5f));
+	Matrix4x4 rotateMatrix0 = MakeRotateMatrix(DirectionToDirectionQuaternion(
+		Vector3(1.f,0.f,0.f),
+		Vector3(-1.f,0.f,0.f)));
+	Matrix4x4 rotateMatrix1 = MakeRotateMatrix(DirectionToDirectionQuaternion(
+		form0,
+		to0));
+	Matrix4x4 rotateMatrix2 = MakeRotateMatrix(DirectionToDirectionQuaternion(
+		from1,
+		to1));
+	
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -81,14 +100,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 		
-		Novice::ScreenPrintf(0, 0, "rotation quaternion: (%.3f, %.3f, %.3f, %.3f)", rotation.x, rotation.y, rotation.z, rotation.w);
-		Novice::ScreenPrintf(0, 20, "rotateMatrix:");
-		Novice::ScreenPrintf(0, 40, "(%.3f, %.3f, %.3f, %.3f)", rotateMatrix.m[0][0], rotateMatrix.m[0][1], rotateMatrix.m[0][2], rotateMatrix.m[0][3]);
-		Novice::ScreenPrintf(0, 60, "(%.3f, %.3f, %.3f, %.3f)", rotateMatrix.m[1][0], rotateMatrix.m[1][1], rotateMatrix.m[1][2], rotateMatrix.m[1][3]);
-		Novice::ScreenPrintf(0, 80, "(%.3f, %.3f, %.3f, %.3f)", rotateMatrix.m[2][0], rotateMatrix.m[2][1], rotateMatrix.m[2][2], rotateMatrix.m[2][3]);
-		Novice::ScreenPrintf(0, 100, "(%.3f, %.3f, %.3f, %.3f)", rotateMatrix.m[3][0], rotateMatrix.m[3][1], rotateMatrix.m[3][2], rotateMatrix.m[3][3]);
-		Novice::ScreenPrintf(0, 120, "rotateByQuaternion: (%.3f, %.3f, %.3f)", rotateByQuaternion.x, rotateByQuaternion.y, rotateByQuaternion.z);
-		Novice::ScreenPrintf(0, 140, "rotateByMatrix: (%.3f, %.3f, %.3f)", rotateByMatrix.x, rotateByMatrix.y, rotateByMatrix.z);
+		MatrixScreenPrintf(0, 0, rotateMatrix0, "rotateMatrix0");
+		MatrixScreenPrintf(0, 200, rotateMatrix1, "rotateMatrix1");
+		MatrixScreenPrintf(0, 400, rotateMatrix2, "rotateMatrix2");
 
 		///
 		/// ↑描画処理ここまで
