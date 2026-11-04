@@ -151,3 +151,40 @@ inline Quaternion DirectionToDirectionQuaternion(const Vector3& from, const Vect
 	float invs = 1.0f / s;
 	return Quaternion(cross.x * invs, cross.y * invs, cross.z * invs, s * 0.5f).Normalized();
 }
+
+inline Quaternion Slerp(const Quaternion& q1, const Quaternion& q2, float t) {
+	// Compute the cosine of the angle between the two quaternions
+	float dot = q1.x * q2.x + q1.y * q2.y + q1.z * q2.z + q1.w * q2.w;
+	// If the dot product is negative, negate one quaternion to take the shorter path
+	Quaternion q2Copy = q2;
+	if (dot < 0.0f) {
+		q2Copy.x = -q2Copy.x;
+		q2Copy.y = -q2Copy.y;
+		q2Copy.z = -q2Copy.z;
+		q2Copy.w = -q2Copy.w;
+		dot = -dot;
+	}
+	const float DOT_THRESHOLD = 0.9995f;
+	if (dot > DOT_THRESHOLD) {
+		// If the quaternions are very close, use linear interpolation
+		return Normalize(Quaternion(
+			q1.x + t * (q2Copy.x - q1.x),
+			q1.y + t * (q2Copy.y - q1.y),
+			q1.z + t * (q2Copy.z - q1.z),
+			q1.w + t * (q2Copy.w - q1.w)
+		));
+	}
+	// Calculate the angle between the quaternions
+	float theta_0 = std::acos(dot); // theta_0 = angle between input quaternions
+	float theta = theta_0 * t;       // theta = angle between q1 and result
+	float sin_theta = std::sin(theta);
+	float sin_theta_0 = std::sin(theta_0);
+	float s0 = std::cos(theta) - dot * sin_theta / sin_theta_0; // scale for q1
+	float s1 = sin_theta / sin_theta_0;                          // scale for q2
+	return Quaternion(
+		s0 * q1.x + s1 * q2Copy.x,
+		s0 * q1.y + s1 * q2Copy.y,
+		s0 * q1.z + s1 * q2Copy.z,
+		s0 * q1.w + s1 * q2Copy.w
+	);
+}

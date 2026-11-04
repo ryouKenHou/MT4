@@ -63,19 +63,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 	
-	Vector3 form0 = Vector3::Normalized(Vector3(1.0f, 0.70f, 0.50f));
-	Vector3 to0 = form0 * -1;
-	Vector3 from1 = Vector3::Normalized(Vector3(-0.60f, 0.9f, 0.2f));
-	Vector3 to1 = Vector3::Normalized(Vector3(0.4f, 0.7f, -0.5f));
-	Matrix4x4 rotateMatrix0 = MakeRotateMatrix(DirectionToDirectionQuaternion(
-		Vector3(1.f,0.f,0.f),
-		Vector3(-1.f,0.f,0.f)));
-	Matrix4x4 rotateMatrix1 = MakeRotateMatrix(DirectionToDirectionQuaternion(
-		form0,
-		to0));
-	Matrix4x4 rotateMatrix2 = MakeRotateMatrix(DirectionToDirectionQuaternion(
-		from1,
-		to1));
+	Quaternion rotation0 = MakeRotateAsisAngleQuaternion(Vector3(0.710f, 0.710f, 0.0f), 0.3f);
+	Quaternion rotation1 = MakeRotateAsisAngleQuaternion(Vector3(0.710f, 0.0f, 0.710f), 3.141592f);
+
+	Quaternion interpolated0 = Slerp(rotation0, rotation1, 0.0f);
+	Quaternion interpolated1 = Slerp(rotation0, rotation1, 0.3f);
+	Quaternion interpolated2 = Slerp(rotation0, rotation1, 0.5f);
+	Quaternion interpolated3 = Slerp(rotation0, rotation1, 0.7f);
+	Quaternion interpolated4 = Slerp(rotation0, rotation1, 1.0f);
 	
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -100,9 +95,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 		
-		MatrixScreenPrintf(0, 0, rotateMatrix0, "rotateMatrix0");
-		MatrixScreenPrintf(0, 200, rotateMatrix1, "rotateMatrix1");
-		MatrixScreenPrintf(0, 400, rotateMatrix2, "rotateMatrix2");
+		Novice::ScreenPrintf(0, 0, "interpolated0(0.0f): %.2f, %.2f, %.2f, %.2f ", interpolated0.x, interpolated0.y, interpolated0.z, interpolated0.w);
+		Novice::ScreenPrintf(0, 20, "interpolated1(0.3f): %.2f, %.2f, %.2f, %.2f ", interpolated1.x, interpolated1.y, interpolated1.z, interpolated1.w);
+		Novice::ScreenPrintf(0, 40, "interpolated2(0.5f): %.2f, %.2f, %.2f, %.2f ", interpolated2.x, interpolated2.y, interpolated2.z, interpolated2.w);
+		Novice::ScreenPrintf(0, 60, "interpolated3(0.7f): %.2f, %.2f, %.2f, %.2f ", interpolated3.x, interpolated3.y, interpolated3.z, interpolated3.w);
+		Novice::ScreenPrintf(0, 80, "interpolated4(1.0f): %.2f, %.2f, %.2f, %.2f ", interpolated4.x, interpolated4.y, interpolated4.z, interpolated4.w);
 
 		///
 		/// ↑描画処理ここまで
