@@ -12,7 +12,30 @@ Vector3 operator*(const float s, const Vector3 v);
 Vector3 operator-(const Vector3 v);
 Vector3 operator+(const Vector3 v);
 
+struct Vector2 {
+	float x;
+	float y;
 
+	static Vector2 Normalized(const Vector2& v) {
+		float length = std::sqrt(v.x * v.x + v.y * v.y);
+		if (length == 0) {
+			return Vector2{ 0, 0 }; // Avoid division by zero
+		}
+		return Vector2{ v.x / length, v.y / length };
+	}
+
+};
+Vector2 operator*(float scalar, const Vector2& v) {
+	return Vector2{ v.x * scalar, v.y * scalar };
+}
+
+Vector2 operator+(const Vector2& v1, const Vector2& v2) {
+	return Vector2{ v1.x + v2.x, v1.y + v2.y };
+}
+
+Vector2 operator-(const Vector2& v1, const Vector2& v2) {
+	return Vector2{ v1.x - v2.x, v1.y - v2.y };
+}
 
 struct Vector3 {
 	float x;
