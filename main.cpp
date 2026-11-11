@@ -51,7 +51,31 @@ void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, std::string s) {
 struct Vector2 {
 	float x;
 	float y;
+
+	static Vector2 Normalized(const Vector2& v) {
+		float length = std::sqrt(v.x * v.x + v.y * v.y);
+		if (length == 0) {
+			return Vector2{ 0, 0 }; // Avoid division by zero
+		}
+		return Vector2{ v.x / length, v.y / length };
+	}
 };
+
+float f(float x) {
+	return 0.125f * x * x * x + 0.25f * x * x;
+}
+
+float fPrime(float x) {
+	return 0.375f * x * x + 0.5f * x;
+}
+
+int worldToScreenX(float worldX) {
+	return static_cast<int>(worldX * 240.0f + 440.f);
+}
+
+int worldToScreenY(float worldY) {
+	return static_cast<int>(-worldY * 240.0f + 600.0f);
+}
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -63,15 +87,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 	
-	Quaternion rotation0 = MakeRotateAsisAngleQuaternion(Vector3(0.710f, 0.710f, 0.0f), 0.3f);
-	Quaternion rotation1 = MakeRotateAsisAngleQuaternion(Vector3(0.710f, 0.0f, 0.710f), 3.141592f);
-
-	Quaternion interpolated0 = Slerp(rotation0, rotation1, 0.0f);
-	Quaternion interpolated1 = Slerp(rotation0, rotation1, 0.3f);
-	Quaternion interpolated2 = Slerp(rotation0, rotation1, 0.5f);
-	Quaternion interpolated3 = Slerp(rotation0, rotation1, 0.7f);
-	Quaternion interpolated4 = Slerp(rotation0, rotation1, 1.0f);
-	
+	float posX = 0.0f;
+	Vector2 position = { 0.0f, 0.0f };
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -86,6 +103,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 		
+		if(keys[DIK_D] != 0) {
+			posX += 0.1f;
+		}
+		if (keys[DIK_A] != 0) {
+			posX -= 0.1f;
+		}
+
+		posX = std::clamp(posX, 0.0f, 2.0f);
+		position = { posX, f(posX) };
+		float slope = fPrime(posX);
+		Vector2 forward = Vector2::Normalized({ 1.0f, slope });
 
 		///
 		/// ↑更新処理ここまで
@@ -94,12 +122,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-		
-		Novice::ScreenPrintf(0, 0, "interpolated0(0.0f): %.2f, %.2f, %.2f, %.2f ", interpolated0.x, interpolated0.y, interpolated0.z, interpolated0.w);
-		Novice::ScreenPrintf(0, 20, "interpolated1(0.3f): %.2f, %.2f, %.2f, %.2f ", interpolated1.x, interpolated1.y, interpolated1.z, interpolated1.w);
-		Novice::ScreenPrintf(0, 40, "interpolated2(0.5f): %.2f, %.2f, %.2f, %.2f ", interpolated2.x, interpolated2.y, interpolated2.z, interpolated2.w);
-		Novice::ScreenPrintf(0, 60, "interpolated3(0.7f): %.2f, %.2f, %.2f, %.2f ", interpolated3.x, interpolated3.y, interpolated3.z, interpolated3.w);
-		Novice::ScreenPrintf(0, 80, "interpolated4(1.0f): %.2f, %.2f, %.2f, %.2f ", interpolated4.x, interpolated4.y, interpolated4.z, interpolated4.w);
+		float segmentCount = 50.0f;
+		float step = 2.0f / segmentCount;
+		for (float x = step; x <= 2; x += step) {
+			float x1 = x - step;
+			float y1 = f(x1);
+			float x2 = x;
+			float y2 = f(x2);
+			Novice::DrawLine(worldToScreenX(x1), worldToScreenY(y1), worldToScreenX(x2), worldToScreenY(y2), WHITE);
+		}
+
+		Novice::DrawLine(worldToScreenX(-1000), worldToScreenY(0), worldToScreenX(1000), worldToScreenY(0), WHITE);
+		Novice::DrawLine(worldToScreenX(2), worldToScreenY(0), worldToScreenX(2), worldToScreenY(f(2)), WHITE);
+
+		Vector2 start = { position.x - forward.x * 0.1f, position.y - forward.y * 0.1f };
+		Vector2 end = { position.x + forward.x * 0.1f, position.y + forward.y * 0.1f };
+
+		Novice::DrawEllipse(worldToScreenX(start.x), worldToScreenY(start.y), 8, 8, 0.0f, RED, kFillModeSolid);
+		Novice::DrawEllipse(worldToScreenX(end.x), worldToScreenY(end.y), 8, 8, 0.0f, RED, kFillModeSolid);
+		Novice::DrawLine(worldToScreenX(start.x), worldToScreenY(start.y), worldToScreenX(end.x), worldToScreenY(end.y), RED);
 
 		///
 		/// ↑描画処理ここまで
