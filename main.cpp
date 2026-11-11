@@ -48,25 +48,23 @@ void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, std::string s) {
 	Novice::ScreenPrintf(x, y+100, "(%.3f, %.3f, %.3f, %.3f)", matrix.m[3][0], matrix.m[3][1], matrix.m[3][2], matrix.m[3][3]);
 }
 
-struct Vector2 {
-	float x;
-	float y;
-
-	static Vector2 Normalized(const Vector2& v) {
-		float length = std::sqrt(v.x * v.x + v.y * v.y);
-		if (length == 0) {
-			return Vector2{ 0, 0 }; // Avoid division by zero
-		}
-		return Vector2{ v.x / length, v.y / length };
-	}
-};
-
 float f(float x) {
 	return 0.125f * x * x * x + 0.25f * x * x;
 }
 
 float fPrime(float x) {
 	return 0.375f * x * x + 0.5f * x;
+}
+
+Vector2 Bezier(const Vector2& p0, const Vector2& p1, const Vector2& p2, float t) {
+	// Quadratic Bezier formula: B(t) = (1-t)^2 * P0 + 2(1-t)t * P1 + t^2 * P2
+	float u = 1.0f - t;
+	return u * u * p0 + 2 * u * t * p1 + t * t * p2;
+}
+
+Vector2 BezierDerivative(const Vector2& p0, const Vector2& p1, const Vector2& p2, float t) {
+	float u = 1.0f - t;
+	return 2 * u * (p1 - p0) + 2 * t * (p2 - p1);
 }
 
 int worldToScreenX(float worldX) {
@@ -87,8 +85,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 	
-	float posX = 0.0f;
+	float t = 0.0f;
 	Vector2 position = { 0.0f, 0.0f };
+
+	Vector2 p0 = { 200.0f, 570.0f };
+	Vector2 p1 = { 800.f, 70.f };
+	Vector2 p2 = { 1080.f, 570.f };
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -102,18 +104,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
-		
-		if(keys[DIK_D] != 0) {
-			posX += 0.1f;
-		}
-		if (keys[DIK_A] != 0) {
-			posX -= 0.1f;
-		}
 
-		posX = std::clamp(posX, 0.0f, 2.0f);
-		position = { posX, f(posX) };
-		float slope = fPrime(posX);
-		Vector2 forward = Vector2::Normalized({ 1.0f, slope });
+		position = Bezier(p0, p1, p2, t);
+		Vector2 forward = BezierDerivative(p0, p1, p2, t);
 
 		///
 		/// ↑更新処理ここまで
@@ -122,31 +115,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-		float segmentCount = 50.0f;
-		float step = 2.0f / segmentCount;
-		for (float x = step; x <= 2; x += step) {
-			float x1 = x - step;
-			float y1 = f(x1);
-			float x2 = x;
-			float y2 = f(x2);
-			Novice::DrawLine(worldToScreenX(x1), worldToScreenY(y1), worldToScreenX(x2), worldToScreenY(y2), WHITE);
+		float segmentCount = 20.0f;
+		float step = 1.0f / segmentCount;
+		for (float x = step; x <= 1.0f; x += step) {
+			Vector2 p11 = Bezier(p0, p1, p2, x - step);
+			Vector2 p22 = Bezier(p0, p1, p2, x);
+			Novice::DrawLine((int)p11.x, (int)p11.y, (int)p22.x, (int)p22.y, WHITE);
 		}
 
-		Novice::DrawLine(worldToScreenX(-1000), worldToScreenY(0), worldToScreenX(1000), worldToScreenY(0), WHITE);
-		Novice::DrawLine(worldToScreenX(2), worldToScreenY(0), worldToScreenX(2), worldToScreenY(f(2)), WHITE);
+		Vector2 start = { position.x , position.y  };
 
-		Vector2 start = { position.x - forward.x * 0.1f, position.y - forward.y * 0.1f };
-		Vector2 end = { position.x + forward.x * 0.1f, position.y + forward.y * 0.1f };
+		Vector2 normalizedForward = Vector2::Normalized(forward);
+		Vector2 end = { position.x + normalizedForward.x * 80.f, position.y + normalizedForward.y * 80.f };
 
-		Novice::DrawEllipse(worldToScreenX(start.x), worldToScreenY(start.y), 8, 8, 0.0f, RED, kFillModeSolid);
-		Novice::DrawEllipse(worldToScreenX(end.x), worldToScreenY(end.y), 8, 8, 0.0f, RED, kFillModeSolid);
-		Novice::DrawLine(worldToScreenX(start.x), worldToScreenY(start.y), worldToScreenX(end.x), worldToScreenY(end.y), RED);
+		Novice::DrawEllipse((int)start.x, (int)start.y, 8, 8, 0.0f, RED, kFillModeSolid);
+		Novice::DrawLine((int)start.x, (int)start.y, (int)end.x, (int)end.y, RED);
 
 		ImGui::Begin("jump");
-		ImGui::Text("A/D: move");
-		ImGui::Text("X: %.3f", posX);
-		ImGui::Text("f'(x): %.3f", fPrime(posX));
-		ImGui::Text("forward: (%.3f, %.3f)", forward.x, forward.y);
+		ImGui::SliderFloat("t", &t, 0.0f, 1.0f);
+		ImGui::SliderFloat("p1", &p1.x, 400.0f, 880.0f);
+		ImGui::SliderFloat("p2", &p1.y, 20.0f, 570.0f);
+		ImGui::Text("B(t): (%.3f, %.3f)", position.x, position.y);
+		ImGui::Text("B'(t): (%.3f, %.3f)", forward.x, forward.y);
 		ImGui::End();	
 
 		///
