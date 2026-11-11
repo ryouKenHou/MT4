@@ -142,6 +142,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Novice::DrawEllipse(worldToScreenX(end.x), worldToScreenY(end.y), 8, 8, 0.0f, RED, kFillModeSolid);
 		Novice::DrawLine(worldToScreenX(start.x), worldToScreenY(start.y), worldToScreenX(end.x), worldToScreenY(end.y), RED);
 
+		ImGui::Begin("jump");
+		ImGui::Text("A/D: move");
+		ImGui::Text("X: %.3f", posX);
+		ImGui::Text("f'(x): %.3f", fPrime(posX));
+		ImGui::Text("forward: (%.3f, %.3f)", forward.x, forward.y);
+		ImGui::End();	
+
 		///
 		/// ↑描画処理ここまで
 		///
